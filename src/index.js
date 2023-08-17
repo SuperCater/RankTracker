@@ -31,6 +31,7 @@ const get = async (url) => {
 	try {
 		return await axios.get(url).then(res => res.data)
 	} catch (e) {
+		console.log(e)
 		return null
 	}
 }
@@ -101,6 +102,7 @@ const index = async (groupID) => {
 
 
 		log("info", `Getting group roles for group ${group.name}...`)
+
 		const roles = await axios.get(groupURL + group.id + "/roles").then(res => res.data.roles)
 		log("success", `Got group roles for group ${group.name}!`)
 
@@ -109,6 +111,7 @@ const index = async (groupID) => {
 			log("info", `Getting group members for role ${role.name}. This may take a minute...`)
 			const members = []
 			let next;
+			const start = Date.now()
 			while (true) {
 				let link = groupURL + group.id + "/roles/" + role.id + "/users?limit=100"
 				if (next) link += "&cursor=" + next
@@ -124,6 +127,7 @@ const index = async (groupID) => {
 				if (next === null) break;
 			}
 			log("success", `Got group members for role ${role.name}!`)
+			log("info", `Took ${Date.now() - start}ms to get members for role ${role.name}!`)
 			log("info", `Adding group members for role ${role.name} to data...`)
 			data.roles.push({
 				name: role.name,
@@ -140,7 +144,6 @@ const index = async (groupID) => {
 
 
 const diff = async () => {
-	log("warn", "Diffing is in texting and not yet done!")
 	for (const group of config.groups) {
 		let ogIndex;
 		log("info", `Diffing group ${group.name}...`)
@@ -157,8 +160,13 @@ const diff = async () => {
 		log("info", `Got index for group ${group.name}!`)
 		log("info", `Getting new index for group ${group.name}...`)
 		await index(group.id)
+
 		const newIndex = JSON.parse(fs.readFileSync(`./data/indexes/${indexes[0]}`))
-		const diffName = `${group.name}-Diff-${new Date().toISOString().split("T")[0]}.txt`
+		let diffName = `${group.name}-Diff-${new Date().toISOString().split("T")[0]}.txt`
+		const diffs = fs.readdirSync("./data/diffs").filter(file => file.startsWith(diffName))
+		if (diffs.includes(diffName)) {
+			diffName = diffName.replace(".txt", `-${diffs.length}.txt`)
+		}
 		fs.writeFileSync(`./data/diffs/${diffName}`, "Diffing group " + group.name + "...\n")
 
 		log("info", `Diffing group ${group.name}...`)
@@ -173,12 +181,12 @@ const diff = async () => {
 					// Find their new role
 					const newRole = newIndex.roles.find(r => r.members.find(m => m.userId === member.userId))
 					if (!newRole) {
-						log("info", `Member ${member.username} is no longer in the group!`)
-						fs.appendFileSync(`./data/diffs/${diffName}`, `Member ${member.username}(${member.userId}) is no longer in the group!\n`)
+						log("info", `Member ${member.username} is no longer in the group! Was in role ${role.name}!`)
+						fs.appendFileSync(`./data/diffs/${diffName}`, `$${member.username}(${member.userId}) is no longer in the group! Was a ${role.name}:\n`)
 						continue
 					}
 					log("info", `Member ${member.username} is now in role ${newRole.name}!`)
-					fs.appendFileSync(`./data/diffs/${diffName}`, `${role.name}: ${member.username}(${member.userId}) => ${newRole.name}\n`)
+					fs.appendFileSync(`./data/diffs/${diffName}`, `${member.username}(${member.userId}) ${role.name}: => ${newRole.name}\n`)
 				}
 			}
 		}
