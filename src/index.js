@@ -1,31 +1,6 @@
 import axios from 'axios'
-import chalk from 'chalk'
 import fs from 'fs'
 import path from 'path'
-import config from './../config.json' assert { type: "json" }
-
-const type = process.argv[2] || "index"
-
-const log = (level, message) => {
-	switch (level) {
-		case "info": {
-			console.log(chalk.blueBright(message))
-			break;
-		}
-		case "warn": {
-			console.log(chalk.yellowBright(message))
-			break;
-		}
-		case "error": {
-			console.log(chalk.redBright(message))
-			break;
-		}
-		case "success": {
-			console.log(chalk.greenBright(message))
-			break;
-		}
-	}
-}
 
 const get = async (url) => {
 	try {
@@ -36,43 +11,14 @@ const get = async (url) => {
 	}
 }
 
-
-
-// Verify data folder exists
-log("info", "Verifying data folder exists...")
-if (!fs.existsSync("./data")) {
-	log("warn", "Data folder does not exist! Creating...")
-	fs.mkdirSync("./data")
-	log("success", "Data folder created!")
-} else {
-	log("success", "Data folder exists!")
-}
-
-log("info", "Verifying indexes folder exists...")
-if (!fs.existsSync("./data/indexes")) {
-	log("warn", "Indexes folder does not exist! Creating...")
-	fs.mkdirSync("./data/indexes")
-	log("success", "Indexes folder created!")
-} else {
-	log("success", "Indexes folder exists!")
-}
-
-log("info", "Verifying diffs folder exists...")
-if (!fs.existsSync("./data/diffs")) {
-	log("warn", "Diffs folder does not exist! Creating...")
-	fs.mkdirSync("./data/diffs")
-	log("success", "Diffs folder created!")
-} else {
-	log("success", "Diffs folder exists!")
-}
-
+const RankTracker = {}
 
 
 const groupURL = "https://groups.roblox.com/v1/groups/"
 
 
 
-const index = async (groupID) => {
+RankTracker.index = async (groupID, options) => {
 	for (const group of config.groups) {
 		if (groupID && group.id !== groupID) continue
 		log("info", `Indexing group ${group.name}...`)
@@ -143,7 +89,7 @@ const index = async (groupID) => {
 }
 
 
-const diff = async () => {
+RankTracker.diff = async () => {
 	for (const group of config.groups) {
 		let ogIndex;
 		log("info", `Diffing group ${group.name}...`)
@@ -194,11 +140,5 @@ const diff = async () => {
 }
 
 
-
-if (type === "index") {
-	log("info", "Starting indexing...")
-	index()
-} else if (type === "diff") {
-	log("info", "Starting diffing...")
-	diff()
-}
+export default RankTracker
+module.exports = RankTracker
