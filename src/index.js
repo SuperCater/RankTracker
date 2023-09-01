@@ -17,11 +17,13 @@ const groupURL = "https://groups.roblox.com/v1/groups/"
 
 
 RankTracker.index = async (groupID, options) => {
+	let group;
 	try {
-		await axios.get(groupURL + group.id)
+		group = await axios.get(groupURL + group.id)
 	} catch (e) {
-		continue
+		throw new Error("Invalid group ID")
 	}
+	console.log(group)
 
 	let data = {
 		groupId: group.id,
@@ -62,10 +64,11 @@ RankTracker.index = async (groupID, options) => {
 }
 
 
+
+
 RankTracker.diff = async (first, second, options) => {
 	//TODO: Rewrite all of this
 }
-
 
 export default RankTracker
 module.exports = RankTracker
