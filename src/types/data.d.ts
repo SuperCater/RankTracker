@@ -1,5 +1,6 @@
 interface Data {
 	name: string,
+	id: number,
 	ranks: Array<number>,
 	roles: Array<{
 		id: number,

@@ -1,11 +1,12 @@
 {
-  "name": "ranktracker",
-  "version": "0.5.0",
+  "name": "robloxranktracker",
+  "version": "0.5.2",
   "description": "This tracks ranks in a group. Was designed for Pinewood.",
   "main": "./build/index.js",
   "type": "commonjs",
   "scripts": {
     "test": "node .",
+	"start": "node --enable-source-maps . ",
     "build": "tsc",
     "fb": "npm run build && node ."
   },

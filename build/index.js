@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const axios_1 = __importDefault(require("axios"));
+const fs_1 = __importDefault(require("fs"));
 const get = (url) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         return yield axios_1.default.get(url).then(res => res.data);
@@ -37,10 +38,13 @@ const RankTracker = {
         const roles = yield get(groupURL + groupID + "/roles");
         let data = {
             name: group.name,
-            ranks: [1],
+            id: group.id,
+            ranks: [15, 25, 30, 32, 35, 45, 50],
             roles: []
         };
         for (const role of roles.roles) {
+            if (!data.ranks.includes(role.rank))
+                continue;
             data.roles.push({
                 id: role.id,
                 name: role.name,
@@ -68,7 +72,74 @@ const RankTracker = {
         return data;
     }),
     diff: (first, second, options = {}) => __awaiter(void 0, void 0, void 0, function* () {
+        const diffData = {
+            changes: []
+        };
+        for (const role1 of first.roles) {
+            const role2 = second.roles.find(r => r.id === role1.id);
+            if (!role2)
+                continue;
+            // Validate each member
+            for (const member of role1.members) {
+                if (!role2.members.find(m => m.id === member.id)) {
+                    // try to find their old rank
+                    let newRole = second.roles.find(r => r.members.find(m => m.id === member.id));
+                    if (newRole === undefined) {
+                        const usersRoles = yield get(`https://groups.roblox.com/v2/users/${member.id}/groups/roles`);
+                        const groupInfo = usersRoles.data.find((r) => r.group.id === second.id);
+                        if (!groupInfo) {
+                            newRole = {
+                                name: "Guest",
+                                rank: 0
+                            };
+                        }
+                        else {
+                            newRole = {
+                                name: groupInfo.role.name,
+                                rank: groupInfo.role.rank
+                            };
+                        }
+                    }
+                    diffData.changes.push({
+                        user: {
+                            id: member.id,
+                            username: member.username,
+                        },
+                        oldRole: {
+                            name: role1.name,
+                            rank: role1.rank,
+                        },
+                        newRole: {
+                            name: newRole.name,
+                            rank: newRole.rank,
+                        }
+                    });
+                    console.log(`${member.username} (${member.id}) was changed to ${newRole.name} from ${role1.name}`);
+                }
+            }
+        }
+        return diffData;
     })
 };
-exports.default = RankTracker;
+function main() {
+    return __awaiter(this, void 0, void 0, function* () {
+        // Print the current directory
+        let old = require("./../data/indexes/data.json");
+        if (!old) {
+            console.log("No data.json file found. Creating one now.");
+            const data = yield RankTracker.index("645836");
+            fs_1.default.writeFileSync("./data/indexes/data.json", JSON.stringify(data));
+            old = data;
+        }
+        const second = yield RankTracker.index("645836");
+        fs_1.default.writeFileSync("./data/indexes/data.json", JSON.stringify(second, null, 2));
+        const diff = yield RankTracker.diff(old, second);
+        const date = new Date().toLocaleDateString().replace(/\//g, "-") + " " + new Date().toLocaleTimeString().replace(/:/g, "-");
+        let name = date + ".json";
+        if (!fs_1.default.existsSync("./data/diffs"))
+            fs_1.default.mkdirSync("./data/diffs");
+        fs_1.default.writeFileSync("./data/diffs/" + name, JSON.stringify(diff, null, 2));
+    });
+}
+main();
 //# sourceMappingURL=index.js.map
