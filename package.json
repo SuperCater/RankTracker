@@ -1,35 +1,40 @@
 {
-  "name": "robloxranktracker",
-  "version": "0.5.2",
-  "description": "This tracks ranks in a group. Was designed for Pinewood.",
-  "main": "./build/index.js",
-  "type": "commonjs",
-  "scripts": {
-    "test": "node .",
-	"start": "node --enable-source-maps . ",
-    "build": "tsc",
-    "fb": "npm run build && node ."
-  },
-  "author": "Cater",
-  "license": "MIT",
-  "dependencies": {
-    "axios": "^1.4.0",
-    "chalk": "^5.3.0"
-  },
-  "devDependencies": {
-    "@types/node": "^20.5.7",
-    "typescript": "^5.2.2"
-  },
-  "types": "./build/index.d.ts",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/SuperCater/RankTracker.git"
-  },
-  "keywords": [
-    "roblox"
-  ],
-  "bugs": {
-    "url": "https://github.com/SuperCater/RankTracker/issues"
-  },
-  "homepage": "https://github.com/SuperCater/RankTracker#readme"
+	"name": "roblox-rank-tracker",
+	"version": "1.1.0",
+	"description": "This tracks ranks in a group. Was designed for Pinewood.",
+	"main": "./dist/index.js",
+	"module": "./dist/index.mjs",
+	"types": "./dist/index.d.ts",
+	"files": [
+		"dist"
+	],
+	"type": "commonjs",
+	"scripts": {
+		"test": "node .",
+		"start": "node --enable-source-maps . ",
+		"build": "tsup",
+		"fb": "npm run build && node ."
+	},
+	"author": "Cater",
+	"license": "MIT",
+	"dependencies": {
+		"axios": "^1.4.0",
+		"chalk": "^5.3.0"
+	},
+	"devDependencies": {
+		"@types/node": "^20.5.7",
+		"tsup": "^7.2.0",
+		"typescript": "^5.2.2"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/SuperCater/RankTracker.git"
+	},
+	"keywords": [
+		"roblox"
+	],
+	"bugs": {
+		"url": "https://github.com/SuperCater/RankTracker/issues"
+	},
+	"homepage": "https://github.com/SuperCater/RankTracker#readme"
 }

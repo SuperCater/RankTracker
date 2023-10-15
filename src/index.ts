@@ -1,6 +1,7 @@
 import axios from 'axios'
 import roles from './types/roles'
 import Data from './types/data'
+import diffData from './types/diffData'
 import fs from 'fs'
 
 const get = async (url: string) => {
@@ -12,15 +13,20 @@ const get = async (url: string) => {
 	}
 }
 
-type RankTrackerType = {
+export type RankTrackerType = {
 	index: (groupID: string, options?: Object) => Promise<Data | null>;
 	diff: (first: Data, second: Data, options?: Object) => Promise<diffData>;
+}
+
+export type Options = {
+	// Nothing here yet
+	ranks?: Array<number>
 }
 
 const groupURL = "https://groups.roblox.com/v1/groups/"
 
 const RankTracker: RankTrackerType = {
-	index: async (groupID: string, options?: Object) => {
+	index: async (groupID: string, options?: Options) => {
 		let group
 		try {
 			group = await get(groupURL + groupID)
@@ -37,7 +43,7 @@ const RankTracker: RankTrackerType = {
 			roles: []
 		}
 		for (const role of roles.roles) {
-			if (!data.ranks.includes(role.rank)) continue
+			if (!data.ranks.includes(role.rank) && data.ranks.length !== 0) continue
 			data.roles.push({
 				id: role.id,
 				name: role.name,
@@ -62,7 +68,7 @@ const RankTracker: RankTrackerType = {
 	}
 	return data
 	},
-	diff : async (first: Data, second: Data, options: Object = {}) => {
+	diff : async (first: Data, second: Data, Options: Object = {}) => {
 		const diffData : diffData = {
 			changes : []
 		}
@@ -112,26 +118,6 @@ const RankTracker: RankTrackerType = {
 }
 
 
-module.exports = RankTracker
-
-/*
-async function main() {
-	// Print the current directory
-	let old = require("./../data/indexes/data.json")
-	if (!old) {
-		console.log("No data.json file found. Creating one now.")
-		const data = await RankTracker.index("645836")
-		fs.writeFileSync("./data/indexes/data.json", JSON.stringify(data))
-		old = data
-	}
-	const second = await RankTracker.index("645836") as Data
-	fs.writeFileSync("./data/indexes/data.json", JSON.stringify(second, null, 2))
-	const diff = await RankTracker.diff(old, second)
-	const date = new Date().toLocaleDateString().replace(/\//g, "-") + " " + new Date().toLocaleTimeString().replace(/:/g, "-")
-	let name = date + ".json"
-	if (!fs.existsSync("./data/diffs")) fs.mkdirSync("./data/diffs")
-
-	fs.writeFileSync("./data/diffs/" + name, JSON.stringify(diff, null, 2))
+module.exports = {
+	RankTracker
 }
-
-main() */

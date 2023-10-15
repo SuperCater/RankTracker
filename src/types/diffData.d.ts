@@ -14,3 +14,5 @@ interface diffData {
 		}
 	}>
 }
+
+export default diffData
