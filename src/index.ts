@@ -111,6 +111,10 @@ const RankTracker: RankTrackerType = {
 	}
 }
 
+
+module.exports = RankTracker
+
+/*
 async function main() {
 	// Print the current directory
 	let old = require("./../data/indexes/data.json")
@@ -130,4 +134,4 @@ async function main() {
 	fs.writeFileSync("./data/diffs/" + name, JSON.stringify(diff, null, 2))
 }
 
-main()
+main() */
