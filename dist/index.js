@@ -74,7 +74,7 @@ var RankTracker = {
       roles: []
     };
     for (const role of roles.roles) {
-      if (!data.ranks.includes(role.rank))
+      if (!data.ranks.includes(role.rank) && data.ranks.length !== 0)
         continue;
       data.roles.push({
         id: role.id,
@@ -102,7 +102,7 @@ var RankTracker = {
     }
     return data;
   }),
-  diff: (_0, _1, ..._2) => __async(void 0, [_0, _1, ..._2], function* (first, second, options = {}) {
+  diff: (_0, _1, ..._2) => __async(void 0, [_0, _1, ..._2], function* (first, second, Options = {}) {
     const diffData = {
       changes: []
     };
@@ -112,21 +112,28 @@ var RankTracker = {
         continue;
       for (const member of role1.members) {
         if (!role2.members.find((m) => m.id === member.id)) {
+          let newRoleInfo;
           let newRole = second.roles.find((r) => r.members.find((m) => m.id === member.id));
           if (newRole === void 0) {
             const usersRoles = yield get(`https://groups.roblox.com/v2/users/${member.id}/groups/roles`);
             const groupInfo = usersRoles.data.find((r) => r.group.id === second.id);
             if (!groupInfo) {
-              newRole = {
+              newRoleInfo = {
                 name: "Guest",
                 rank: 0
               };
             } else {
-              newRole = {
+              newRoleInfo = {
                 name: groupInfo.role.name,
                 rank: groupInfo.role.rank
               };
             }
+          } else {
+            newRoleInfo = {
+              name: newRole.name,
+              rank: newRole.rank
+            };
+            newRole.members.splice(newRole.members.findIndex((m) => m.id === member.id), 1);
           }
           diffData.changes.push({
             user: {
@@ -138,12 +145,33 @@ var RankTracker = {
               rank: role1.rank
             },
             newRole: {
-              name: newRole.name,
-              rank: newRole.rank
+              name: newRoleInfo.name,
+              rank: newRoleInfo.rank
             }
           });
-          console.log(`${member.username} (${member.id}) was changed to ${newRole.name} from ${role1.name}`);
+          console.log(`${member.username} (${member.id}) was changed to ${newRoleInfo.name} from ${role1.name}`);
+        } else {
+          role2.members.splice(role2.members.findIndex((m) => m.id === member.id), 1);
         }
+      }
+    }
+    for (const role2 of second.roles) {
+      for (const member of role2.members) {
+        console.log(`${member.username} (${member.id}) was added to ${role2.name}`);
+        diffData.changes.push({
+          user: {
+            id: member.id,
+            username: member.username
+          },
+          oldRole: {
+            name: "Unkown",
+            rank: 0
+          },
+          newRole: {
+            name: role2.name,
+            rank: role2.rank
+          }
+        });
       }
     }
     return diffData;

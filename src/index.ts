@@ -1,8 +1,46 @@
 import axios from 'axios'
-import roles from './types/roles'
-import Data from './types/data'
-import diffData from './types/diffData'
-import fs from 'fs'
+
+export type Data = {
+	name: string,
+	id: number,
+	ranks: Array<number>,
+	roles: Array<{
+		id: number,
+		name: string,
+		rank: number,
+		members: Array<{
+			id: number,
+			username: string,
+		}>
+	}>
+}
+
+export type diffData = {
+	changes: Array<{
+		user: {
+			id: number,
+			username: string,
+		},
+		oldRole: {
+			name: string,
+			rank: number,
+		},
+		newRole: {
+			name: string,
+			rank: number,
+		}
+	}>
+}
+
+export type roles = {
+	groupId: number,
+	roles: Array<{
+		id: number,
+		name: string,
+		rank: number,
+		memberCount: number
+	}>
+}
 
 const get = async (url: string) => {
 	try {
@@ -68,32 +106,40 @@ const RankTracker: RankTrackerType = {
 	}
 	return data
 	},
-	diff : async (first: Data, second: Data, Options: Object = {}) => {
+	diff : async (first: Data, second : Data, Options: Object = {}) => {
 		const diffData : diffData = {
 			changes : []
 		}
-		for (const role1 of first.roles)	{
-			const role2 = second.roles.find(r => r.id === role1.id)
-			if (!role2) continue
+
+		for (const role1 of first.roles) { // Loop through all roles
+			const role2 = second.roles.find(r => r.id === role1.id) // Get the second role
+			if (!role2) continue // skip if the role doesn't exist
 			// Validate each member
-			for (const member of role1.members) {
-				if (!role2.members.find(m => m.id === member.id)) {
+			for (const member of role1.members) { // Got through all members in the first role
+				if (!role2.members.find(m => m.id === member.id)) { // Check if the member is in the second role
 					// try to find their old rank
-					let newRole : any = second.roles.find(r => r.members.find(m => m.id === member.id))
-					if (newRole === undefined) {
+					let newRoleInfo
+					let newRole = second.roles.find(r => r.members.find(m => m.id === member.id)) // If they are not in the second role, try to find their new role from the new index
+					if (newRole === undefined) { // If they are not in the new index, try and fetch it from the api
 						const usersRoles = await get(`https://groups.roblox.com/v2/users/${member.id}/groups/roles`)
 						const groupInfo = usersRoles.data.find((r: any) => r.group.id === second.id)
 						if (!groupInfo) {
-							newRole = {
+							newRoleInfo = {
 								name: "Guest",
 								rank: 0
 							}
-						} else {
-							newRole = {
+						} else { // If they are in the api, set them to their new role
+							newRoleInfo = {
 								name: groupInfo.role.name,
 								rank: groupInfo.role.rank
 							}
 						}
+					} else {
+						newRoleInfo = {
+							name: newRole.name,
+							rank: newRole.rank
+						}
+						newRole.members.splice(newRole.members.findIndex(m => m.id === member.id), 1)
 					}
 					diffData.changes.push({
 						user: {
@@ -105,19 +151,40 @@ const RankTracker: RankTrackerType = {
 							rank: role1.rank,
 						},
 						newRole: {
-							name: newRole.name,
-							rank: newRole.rank,
+							name: newRoleInfo.name,
+							rank: newRoleInfo.rank,
 						}
 					})
-					console.log(`${member.username} (${member.id}) was changed to ${newRole.name} from ${role1.name}`)
+					console.log(`${member.username} (${member.id}) was changed to ${newRoleInfo.name} from ${role1.name}`)
+				} else {
+					role2.members.splice(role2.members.findIndex(m => m.id === member.id), 1)
 				}
 			}
 		}
+
+		for (const role2 of second.roles) {
+			for (const member of role2.members) {
+				console.log(`${member.username} (${member.id}) was added to ${role2.name}`)
+				diffData.changes.push({
+					user: {
+						id: member.id,
+						username: member.username,
+					},
+					oldRole: {
+						name: "Unkown",
+						rank: 0,
+					},
+					newRole: {
+						name: role2.name,
+						rank: role2.rank,
+					}
+				})
+			}
+		}
+
 		return diffData
 	}
 }
 
 
-module.exports = {
-	RankTracker
-}
+module.exports = RankTracker
