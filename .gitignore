@@ -1,2 +1,4 @@
 /node_modules
-/data/diffs
+/data/diff
+/data/diffs/*.json
+/data/indexes/*.json
