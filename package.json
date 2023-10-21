@@ -1,6 +1,6 @@
 {
 	"name": "roblox-rank-tracker",
-	"version": "1.1.12",
+	"version": "1.1.13",
 	"description": "This tracks ranks in a group. Was designed for Pinewood.",
 	"main": "./dist/index.js",
 	"module": "./dist/index.mjs",

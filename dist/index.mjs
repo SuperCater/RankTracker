@@ -107,6 +107,10 @@ var RankTracker = {
               name: newRole.name,
               rank: newRole.rank
             };
+            const member2 = newRole.members.find((m) => m.id === member.id);
+            if (member.username != (member2 == null ? void 0 : member2.username)) {
+              console.log(`${member.username} (${member.id}) changed their username to ${member2 == null ? void 0 : member2.username}`);
+            }
             newRole.members.splice(newRole.members.findIndex((m) => m.id === member.id), 1);
           }
           diffData.changes.push({
@@ -125,6 +129,10 @@ var RankTracker = {
           });
           console.log(`${member.username} (${member.id}) was changed to ${newRoleInfo.name} from ${role1.name}`);
         } else {
+          const member2 = role2.members.find((m) => m.id === member.id);
+          if (member.username != (member2 == null ? void 0 : member2.username)) {
+            console.log(`${member.username} (${member.id}) changed their username to ${member2 == null ? void 0 : member2.username}`);
+          }
           role2.members.splice(role2.members.findIndex((m) => m.id === member.id), 1);
         }
       }
